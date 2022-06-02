@@ -1289,7 +1289,13 @@ def main():
         with cd(BASE_DIR):
             version = read_version_file('VERSION')
             sora_cpp_sdk_version = version['SORA_CPP_SDK_VERSION']
-            sora_cpp_sdk_commit = cmdcap(['git', 'rev-parse', 'HEAD'])
+            try:
+                sora_cpp_sdk_commit = cmdcap(['git', 'rev-parse', 'HEAD'])
+            except subprocess.CalledProcessError:
+                # dockerでビルドしたときにgitリポジトリの所有者が異なるためエラーになるが
+                # safe.directoryの指定を追加することでエラーを回避できる
+                cmd(['git', 'config', '--global', '--add', 'safe.directory', BASE_DIR])
+                sora_cpp_sdk_commit = cmdcap(['git', 'rev-parse', 'HEAD'])
             android_native_api_level = version['ANDROID_NATIVE_API_LEVEL']
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
