@@ -415,9 +415,14 @@ def get_webrtc_info(webrtcbuild: bool, source_dir: str, build_dir: str, install_
 
 
 @versioned
-def install_rootfs(version, install_dir, conf):
+def install_rootfs(version, install_dir, conf, platform):
     rootfs_dir = os.path.join(install_dir, 'rootfs')
     rm_rf(rootfs_dir)
+    if platform.target.os == 'jetson' and platform.build.arch == 'arm64':
+        # dbus のセットアップに /dev/urandom が必要
+        mkdir_p(os.path.join(rootfs_dir, 'dev'))
+        dev_urandom = os.path.join(rootfs_dir, 'dev/urandom')
+        cmd(['mknod', dev_urandom, 'c', '1', '9'])
     cmd(['multistrap', '--no-auth', '-a', 'arm64', '-d', rootfs_dir, '-f', conf])
     # 絶対パスのシンボリックリンクを相対パスに置き換えていく
     for dir, _, filenames in os.walk(rootfs_dir):
@@ -892,6 +897,7 @@ def install_deps(platform: Platform, source_dir, build_dir, install_dir, debug,
                 'version_file': os.path.join(install_dir, 'rootfs.version'),
                 'install_dir': install_dir,
                 'conf': conf,
+                'platform': platform,
             }
             install_rootfs(**install_rootfs_args)
 
