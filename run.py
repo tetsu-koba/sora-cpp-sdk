@@ -1069,7 +1069,10 @@ def install_deps(platform: Platform, source_dir, build_dir, install_dir, debug,
         elif platform.target.os == 'jetson':
             sysroot = os.path.join(install_dir, 'rootfs')
             install_boost_args['target_os'] = 'linux'
-            install_boost_args['cxx'] = os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')
+            if platform.build.arch == 'x86_64':
+                install_boost_args['cxx'] = os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')
+            else:
+                install_boost_args['cxx'] = 'clang++'
             install_boost_args['cflags'] = [
                 '-fPIC',
                 f"--sysroot={sysroot}",
@@ -1348,10 +1351,11 @@ def main():
             cmake_args.append("-DUSE_LIBCXX=ON")
             cmake_args.append(
                 f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
-            cmake_args.append(
-                f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}")
-            cmake_args.append(
-                f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}")
+            if platform.build.arch == 'x86_64':
+                cmake_args.append(
+                    f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}")
+                cmake_args.append(
+                    f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}")
             cmake_args.append('-DUSE_JETSON_ENCODER=ON')
 
         # NvCodec
@@ -1459,10 +1463,11 @@ def main():
                     cmake_args.append("-DUSE_LIBCXX=ON")
                     cmake_args.append(
                         f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
-                    cmake_args.append(
-                        f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}")
-                    cmake_args.append(
-                        f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}")
+                    if platform.build.arch == 'x86_64':
+                        cmake_args.append(
+                            f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}")
+                        cmake_args.append(
+                            f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}")
                 cmd(['cmake', os.path.join(BASE_DIR, 'test')] + cmake_args)
                 cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}', '--config', configuration])
                 if args.run:
