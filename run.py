@@ -868,7 +868,7 @@ class Platform(object):
             self._check(build.arch == 'x86_64')
         if target.os == 'jetson':
             self._check(build.os == 'ubuntu')
-            self._check(build.arch == 'x86_64')
+            self._check(build.arch in ('x86_64', 'arm64'))
 
         self.build = build
         self.target = target
